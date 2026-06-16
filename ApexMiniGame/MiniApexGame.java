@@ -478,7 +478,6 @@ public class MiniApexGame extends JPanel implements ActionListener, KeyListener,
             int enemyWeaponType = enemy[5]; int combatStyle = enemy[8]; int isHealingNPC = enemy[10]; int myTeam = enemy[11];
             double eDistToCenter = Math.sqrt(Math.pow(ex - 600, 2) + Math.pow(ey - 450, 2));
 
-            // 💡 修正 1：毒圈扣血改成安全打標，不再於走訪期間直接 remove()
             if (eDistToCenter > zoneRadius && triggerZoneDamage) {
                 enemy[4] -= 5; 
                 if (enemy[4] <= 0) { deadEnemies.add(enemy); continue; }
@@ -538,7 +537,6 @@ public class MiniApexGame extends JPanel implements ActionListener, KeyListener,
                 if (minDist < 130 && hasTarget) { goalX = ex - (targetX - ex); goalY = ey - (targetY - ey); }
             }
 
-            // 💡 修正 2：改用純整數步長運算，徹底移除 Math.ceil() 負數極端死鎖
             int currentESpeed = (enemy[10] == 1) ? 1 + speedBonus : 1 + speedBonus; 
             int moveX = 0; int moveY = 0;
             
@@ -546,7 +544,7 @@ public class MiniApexGame extends JPanel implements ActionListener, KeyListener,
                 if (Math.abs(ex - goalX) > currentESpeed) {
                     moveX = (ex < goalX) ? currentESpeed : -currentESpeed;
                 } else {
-                    enemy[0] = goalX; // 距離太近直接對齊，不抽搐
+                    enemy[0] = goalX; 
                 }
                 if (Math.abs(ey - goalY) > currentESpeed) {
                     moveY = (ey < goalY) ? currentESpeed : -currentESpeed;
@@ -572,21 +570,21 @@ public class MiniApexGame extends JPanel implements ActionListener, KeyListener,
 
             if (runToSafeZone || enemy[10] == 1 || !hasTarget) continue; 
 
-            // 開槍
+            // 開槍 (已修復：補上 enemyWeaponType 以防止陣列越界異常)
             enemy[2]++;
             if (enemyWeaponType == 0 && enemy[2] >= 130) { 
                 enemy[2] = 0; double angle = Math.atan2(targetY - enemy[1], targetX - enemy[0]);
-                enemyBullets.add(new int[]{enemy[0], enemy[1], (int)(Math.cos(angle)*5), (int)(Math.sin(angle)*5), 2, enemy[9], myTeam}); 
+                enemyBullets.add(new int[]{enemy[0], enemy[1], (int)(Math.cos(angle)*5), (int)(Math.sin(angle)*5), 2, enemyWeaponType, enemy[9], myTeam}); 
             } else if (enemyWeaponType == 1 && enemy[2] >= 100) {
                 if (enemyWeaponType == 1 && enemy[6] > 0) continue; 
                 enemy[2] = 0; double baseAngle = Math.atan2(targetY - enemy[1], targetX - enemy[0]);
                 for (int i = 0; i < 3; i++) { 
                     double offset = -0.12 + (i * 0.12); 
-                    enemyBullets.add(new int[]{enemy[0], enemy[1], (int)(Math.cos(baseAngle+offset)*6), (int)(Math.sin(baseAngle+offset)*6), 2, enemy[9], myTeam}); 
+                    enemyBullets.add(new int[]{enemy[0], enemy[1], (int)(Math.cos(baseAngle+offset)*6), (int)(Math.sin(baseAngle+offset)*6), 2, enemyWeaponType, enemy[9], myTeam}); 
                 }
             } else if (enemyWeaponType == 2 && enemy[2] >= 75) {
                 enemy[2] = 0; double angle = Math.atan2(targetY - enemy[1], targetX - enemy[0]);
-                enemyBullets.add(new int[]{enemy[0], enemy[1], (int)(Math.cos(angle)*7), (int)(Math.sin(angle)*7), 2, enemy[9], myTeam}); 
+                enemyBullets.add(new int[]{enemy[0], enemy[1], (int)(Math.cos(angle)*7), (int)(Math.sin(angle)*7), 2, enemyWeaponType, enemy[9], myTeam}); 
             }
         }
 
